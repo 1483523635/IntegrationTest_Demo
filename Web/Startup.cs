@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Web.Models;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace Web
 {
@@ -25,8 +26,13 @@ namespace Web
         {
             services.AddMvc();
 
-            services.AddDbContext<UserInfoContext>(options =>
-                    options.UseSqlServer(Configuration.GetConnectionString("UserInfoContext")));
+            services.AddDbContextPool<UserInfoContext>(options =>
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("UserInfoContext"), sqlServerOptionsAction: option =>
+                {
+                    option.EnableRetryOnFailure(maxRetryCount: 10, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null);
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
